@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>贪吃蛇</title>
+	<style>
+		*{margin: 0;padding: 0;}
+		#container{width: 1000px;border: 1px solid #000;margin: 50px auto;}
+		#ground{width: 1000px;height: 500px;background: #ccc;position:relative;}
+		#ground .block{width: 20px;height: 20px;background: orange;float: left}
+		#ground .section{background: red;position:absolute;top: 60px;}
+		#ground .food{background: green;position: absolute;}
+		#control{width: 1000px;height: 50px;}
+		#banner{float:left;line-height: 50px;margin-left: 10px;}
+		#buttons{float:right;line-height: 50px;margin-right: 10px;}
+	</style>
+</head>
+<body>
+
+	<div id="container">
+		<div id="ground"></div>
+		<div id="control">
+			<span id = "banner">JavaScript 贪吃蛇 By Staceycm</span>
+			<div id="buttons">
+				<input type="button" id ="btn-start" value="开始">
+				<input type="button" id="btn-pause" value="暂停">
+                <input type="button" id ="btn-fast" value="加速">
+                <input type="button" id ="btn-slow" value="减速">
+			</div>
+		</div>
+	</div>
+	<script>
+		//1.初始化草场
+		var oGround = document.getElementById('ground');
+		var ROWS=25,COLS=50;
+		
+		for(var i=0;i<ROWS;i++){
+			for(var j=0;j<COLS;j++){
+				var oDiv = document.createElement('div');//创建div元素方法
+				oDiv.className = 'block';
+				oGround.appendChild(oDiv);//在任意存在子节点前添加节点
+
+			}
+		}
+		//2.初始化小蛇
+		var aSnakebody=[];
+        for(var i=0;i<3;i++){        	
+        	var oSection = document.createElement('div');
+        	//oSection.innerHTML = i;//显示每个section位置
+        	oSection.className = 'block section';//多类选择器
+        	oSection.style.left = (3-i)*20 + 'px';//定义蛇头位置
+        	oGround.appendChild(oSection);
+        	aSnakebody.push(oSection);
+        }
+        //3.初始化食物
+        var oFood;
+        function createFood(){
+          do{
+            //设置标志位 代表是否找到合适标志位的位置，true标示找到 false标示未找到
+            var bFlag = true;
+            //检测食物在ground边界内
+            var iRandLeft = Math.ceil(Math.random()*980),
+                iRandTop = Math.ceil(Math.random()*480);
+            var iLeft = iRandLeft - iRandLeft%20,
+                iTop = iRandTop - iRandTop%20;
+            //检测食物是否和蛇身重合
+            for(var i=0;i<aSnakebody.length;i++){
+                if(aSnakebody[i].offsetLeft==iLeft && aSnakebody[i].offsetTop ==iTop){
+                    //offsetLeft offsetTop 获取元素的左上坐标
+                    bFlag=false;
+                    break;
+                }
+            }
+            oFood = document.createElement('div');
+            oFood.className = 'block food';
+            oFood.style.left = iLeft +'px';
+            oFood.style.top = iTop +'px';
+            oGround.appendChild(oFood);  
+
+         }while(!bFlag);
+        //设置食物样式
+        
+        }
+        createFood();
+        
+        //4.开始游戏
+        var bDown = false;//一个标示位，用来控制键盘按下的速度，false标示按下无效 true标示有效
+        var oBtnStart = document.getElementById('btn-start');
+        var timer;
+        var bButton = true;//
+        var time = function(){
+            timer = setInterval(function () {move();},1000); 
+        }
+        oBtnStart.onclick =function(){
+            if(bButton){
+                if(timer){clearInterval(timer);}
+                time();          
+                oBtnStart.value = '结束';
+                bButton = false;
+            }else{
+                window.location.reload();
+                //clearInterval(timer);
+                alert('Game Over!');
+                oBtnStart.value = '开始';
+                bButton = true;
+            }           
+        };
+                //暂停游戏
+        var bPause = true;
+        var oBtnPause = document.getElementById('btn-pause');
+        oBtnPause.onclick = function(){
+            if(bPause){
+                clearInterval(timer);
+                oBtnPause.value = '恢复';
+                bPause=false;    
+            }else{
+                // window.location.reload();
+                // //clearInterval(timer);
+                time();
+                oBtnStart.value = '暂停';
+                bButton = true;
+
+            }
+        };
+          
+            
+        //加速
+        var oBtnFast = document.getElementById('btn-fast');
+        oBtnFast.onclick = function(){
+            if(timer){
+                clearInterval(timer);
+            }
+            setInterval(function(){move();},500);
+        };
+        //减速
+        var oBtnSlow = document.getElementById('btn-slow');
+        oBtnSlow.onclick = function(){
+            if(timer){
+                clearInterval(timer);
+             }
+            setInterval(function(){move();},2000);
+        };
+
+        //按键时改变方向
+        var direction = 'right';
+        function move(){
+            var snakeHead = aSnakebody[0];
+            var oNextPos = {
+                left:snakeHead.offsetLeft,
+                top:snakeHead.offsetTop
+            };
+            if(direction == 'left'){
+                oNextPos.left -=20;
+            }else if(direction == 'up'){
+                oNextPos.top -=20;
+            }else if(direction == 'right'){
+                oNextPos.left +=20;
+            }else if(direction == 'down'){
+                oNextPos.top +=20;
+            }
+            for(var i=0;i<aSnakebody.length;i++){
+                var oNowPos = {
+                    left:aSnakebody[i].offsetLeft,
+                    top:aSnakebody[i].offsetTop
+                };
+                aSnakebody[i].style.left = oNextPos.left + 'px';
+                aSnakebody[i].style.top = oNextPos.top + 'px';
+                oNextPos = oNowPos;
+            }
+      //   	for(var i=aSnakebody.length-1;i>=1;i--){
+      //   		aSnakebody[i].style.left = aSnakebody[i-1].offsetLeft+'px';
+      //   		aSnakebody[i].style.top = aSnakebody[i-1].offsetTop+'px';
+      //   	}
+      //       var snakeHead = aSnakebody[0];
+    		// if(direction == 'left'){
+    		// 	snakeHead.style.left = snakeHead.offsetLeft-20 +'px';
+    		// }else if(direction == 'up'){
+    		// 	snakeHead.style.top = snakeHead.offsetTop-20 +'px';
+    		// }else if(direction == 'right'){
+    		// 	snakeHead.style.left = snakeHead.offsetLeft+20 +'px';
+    		// }else if(direction == 'down'){
+    		// 	snakeHead.style.top = snakeHead.offsetTop+20 +'px';
+    		// }
+            //吃身体
+            for(var i=4;i<aSnakebody.length;i++){
+                if(snakeHead.offsetTop == aSnakebody[i].offsetTop && snakeHead.offsetLeft == aSnakebody[i].offsetLeft){
+                    alert("Game Over!");
+                    clearInterval(timer);
+                }
+            }
+            //吃食物
+            if(snakeHead.offsetLeft == oFood.offsetLeft &&snakeHead.offsetTop == oFood.offsetTop){
+                oFood.className = 'block section';
+                aSnakebody.push(oFood);
+                createFood();
+            }
+            //蛇吃墙
+            if(snakeHead.offsetTop == 500 || snakeHead.offsetTop == -20 ||snakeHead.offsetLeft == 1000 ||snakeHead.offsetLeft == -20){
+                alert("Game Over!");
+                clearInterval(timer);
+            }
+
+            bDown = true;
+    	}
+        document.onkeydown = function(e){
+        	e = e||window.event;//e表示事件，浏览器兼容有问题所以用或方式解决
+        	var key = e.which||e.KeyCode;//获取键盘码，浏览器兼容有问题所以用或方式解决
+        	switch(key){
+        		case 37:
+                    if(bDown){
+                       if(direction !='right'){
+                            direction = 'left';
+                        } 
+                    }
+            		bDown = false;
+        		break;
+        		case 38:
+            		if(bDown){
+                        if(direction !='down'){
+                            direction = 'up'; 
+                        }
+                    }
+                    bDown = false;
+        		break;
+        		case 39:
+        		    if(bDown){
+                        if(direction !='left'){
+                            direction = 'right'; 
+                        }
+                    }
+                    bDown = false;
+        		break;
+        		case 40:
+        		    if(bDown){
+                        if(direction !='up'){
+                        direction = 'down';
+                        }
+                    }
+                    bDown = false;
+        		break;
+        	}
+        };
+
+        
+	</script>
+</body>
+</html>
